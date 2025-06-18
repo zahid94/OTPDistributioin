@@ -1,0 +1,20 @@
+<div class="otp-wrapper">
+    <div class="otp-container">
+        <div class="timer-header">
+            <span>timer</span>
+            <div class="timer">{{ timer }}s</div>
+        </div>
+    </div>
+    <form [formGroup]="form" (ngSubmit)="submitOtp()" class="otp-form">
+        <div class="otp-inputs">
+            <input type="text" maxlength="1" formControlName="d1" (keydown)="onKey($event, null, d2)" #d1>
+            <input type="text" maxlength="1" formControlName="d2" (keydown)="onKey($event, d1, d3)" #d2>
+            <input type="text" maxlength="1" formControlName="d3" (keydown)="onKey($event, d2, d4)" #d3>
+            <input type="text" maxlength="1" formControlName="d4" (keydown)="onKey($event, d3, d5)" #d4>
+            <input type="text" maxlength="1" formControlName="d5" (keydown)="onKey($event, d4, d6)" #d5>
+            <input type="text" maxlength="1" formControlName="d6" (keydown)="onKey($event, d5, null)" #d6>
+        </div>
+
+        <button type="submit">Verify OTP</button>
+    </form>
+</div>
