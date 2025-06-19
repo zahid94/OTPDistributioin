@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, ElementRef, EventEmitter, Input, NgZone, OnDestroy, OnInit, Output, output, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 @Component({
@@ -13,11 +13,18 @@ export class OtpValidationComponent implements OnInit, AfterViewInit, OnDestroy 
 
   @ViewChild('d1') d1Input!: ElementRef<HTMLInputElement>;
 
-  timer: number = 60;
+  @Input() timer: number = 2;
+  second: number = 60;
   isExpired: boolean = false;
   private intervalId: any;
 
-  constructor(private fb: FormBuilder, private ngZone: NgZone) { }
+  @Output() verify: EventEmitter<string> = new EventEmitter<string>();
+
+  constructor(
+    private fb: FormBuilder,
+    private ngZone: NgZone,
+    private changeDetected: ChangeDetectorRef
+  ) { }
 
   ngOnInit(): void {
 
@@ -29,16 +36,32 @@ export class OtpValidationComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   startTimer(): void {
-    this.intervalId = setInterval(() => {
-      this.ngZone.run(() => {
-        if (this.timer > 0) {
+    this.ngZone.runOutsideAngular(() => {
+      let i: number = 0;
+      this.intervalId = setInterval(() => {
+        if (i == 0) {
           this.timer--;
-        } else {
-          this.isExpired = true;
-          clearInterval(this.intervalId);
+          this.second--;
+          this.changeDetected.detectChanges();
+          i++;
         }
-      });
-    }, 1000);
+        this.ngZone.run(() => {
+          if (this.timer >= 0 && this.second > 0) {
+            this.second--;
+          } else if (this.timer >= 0 && this.second == 0) {
+            this.timer--;
+            this.second = 59;
+          } else {
+            this.isExpired = true;
+            this.timer = 0;
+            this.second = 0;
+            clearInterval(this.intervalId);
+            this.form.disable();
+            this.changeDetected.detectChanges();
+          }
+        });
+      }, 1000);
+    });
   }
 
   form: FormGroup = this.fb.group({
@@ -63,13 +86,16 @@ export class OtpValidationComponent implements OnInit, AfterViewInit, OnDestroy 
     }
   }
 
-  submitOtp() {
-    if (this.form.valid) {
-      const otp = Object.values(this.form.value).join('');
-      console.log('Entered OTP:', otp);
-    } else {
-      alert('Please enter all 6 digits.');
-    }
+  onResent(): void {
+    clearInterval(this.intervalId);
+    this.second = 60;
+    this.form.enable();
+    this.startTimer();
+  }
+
+  onVerify(): void {
+    const otp = Object.values(this.form.value).join('');
+    this.verify.emit(otp);
   }
 
   ngOnDestroy(): void {

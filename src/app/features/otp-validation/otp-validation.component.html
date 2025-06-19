@@ -1,11 +1,11 @@
 <div class="otp-wrapper">
     <div class="otp-container">
         <div class="timer-header">
-            <span>timer</span>
-            <div class="timer">{{ timer }}s</div>
+            <div class="timer">timer</div>
+            <div class="timer">{{ timer }}: {{ second }}s</div>
         </div>
     </div>
-    <form [formGroup]="form" (ngSubmit)="submitOtp()" class="otp-form">
+    <form [formGroup]="form" class="otp-form">
         <div class="otp-inputs">
             <input type="text" maxlength="1" formControlName="d1" (keydown)="onKey($event, null, d2)" #d1>
             <input type="text" maxlength="1" formControlName="d2" (keydown)="onKey($event, d1, d3)" #d2>
@@ -14,7 +14,9 @@
             <input type="text" maxlength="1" formControlName="d5" (keydown)="onKey($event, d4, d6)" #d5>
             <input type="text" maxlength="1" formControlName="d6" (keydown)="onKey($event, d5, null)" #d6>
         </div>
-
-        <button type="submit">Verify OTP</button>
+        <div class="submit-container">
+            <button type="button" [disabled]="!isExpired" (click)="onResent()">Resent</button>
+            <button type="button" [disabled]="isExpired" (click)="onVerify()">Verify</button>
+        </div>
     </form>
 </div>
